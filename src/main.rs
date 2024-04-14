@@ -1,5 +1,6 @@
 mod systemd;
 
+use std::process::exit;
 use is_root::is_root;
 
 use clap::{Parser};
@@ -121,7 +122,7 @@ fn main() {
             }
 
             if copy_env {
-                let mut env = std::env::vars().collect::<Vec<(String, String)>>();
+                let env = std::env::vars().collect::<Vec<(String, String)>>();
                 for (key, value) in env {
                     unit_service.push(("Environment".to_string(), format!("{}='{}'", key, value)));
                 }
@@ -139,46 +140,53 @@ fn main() {
             systemd.restart(&service_name);
         }
         Some(Command::Start { name }) => {
-            // Handle start command
-            println!("Start command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.start(&service_name);
         }
         Some(Command::Stop { name }) => {
-            // Handle stop command
-            println!("Stop command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.stop(&service_name);
         }
         Some(Command::Reload { name }) => {
-            // Handle reload command
-            println!("Reload command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.reload(&service_name);
         }
         Some(Command::Restart { name }) => {
-            // Handle restart command
-            println!("Restart command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.restart(&service_name);
         }
         Some(Command::Status { name }) => {
-            // Handle status command
-            println!("Status command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.status(&service_name);
         }
         Some(Command::List) => {
-            // Handle list command
-            println!("List command executed");
+            let output = systemd.list_unit_files(Some("lpm-*"));
+
+            println!("Available units:");
+            let stdout = String::from_utf8(output.stdout).expect("Failed to convert stdout to string");
+            for line in stdout.lines().skip(1).take(stdout.lines().count() - 2) {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() > 0 {
+                    println!("{}", parts[0][4..parts[0].len()-8].to_string());
+                }
+            }
         }
         Some(Command::Delete { name }) => {
-            // Handle delete command
-            println!("Delete command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.uninstall(&service_name);
+            systemd.daemon_reload();
         }
         Some(Command::Agent { url }) => {
-            // Handle agent command
-            println!("Agent command executed: url={}", url);
+            println!("Currently agent is not implemented");
+            println!("Agent URL: {}", url);
+            exit(1);
         }
         Some(Command::Logs { name }) => {
-            // Handle log command
-            println!("Log command executed: name={}", name);
             let service_name = format!("lpm-{}", name);
             systemd.logs(&service_name);
         }
         None => {
-            // No command provided
-            println!("No command provided");
+            println!("No command provided, use --help for usage information");
         }
     }
 }

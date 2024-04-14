@@ -52,8 +52,14 @@ impl Systemd {
         output
     }
 
+    fn exec_systemctl(&self, args: Vec<&str>) {
+        Command::new("systemctl")
+            .args(&self.default_args)
+            .args(args)
+            .exec();
+    }
+
     fn exec_command(&self, args: Vec<&str>, command: &str) {
-        // Fully replaces current process with new process
         Command::new(command)
             .args(args)
             .exec();
@@ -124,8 +130,8 @@ impl Systemd {
         output.status.success()
     }
 
-    pub fn status(&self, service: &str) -> std::process::Output {
-        self.run_systemctl(vec!["status", service])
+    pub fn status(&self, service: &str) {
+        self.exec_systemctl(vec!["status", service])
     }
 
     pub fn list_unit_files(&self, pattern: Option<&str>) -> std::process::Output {
