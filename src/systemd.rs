@@ -1,5 +1,6 @@
 use std::env;
 use std::fs;
+use std::os::unix::process::CommandExt;
 use std::process::{Command};
 use ini::Ini;
 
@@ -39,7 +40,7 @@ impl Systemd {
             .expect("Failed to create services directory");
     }
 
-    fn run_command(&self, args: Vec<&str>) -> std::process::Output {
+    fn run_systemctl(&self, args: Vec<&str>) -> std::process::Output {
         let mut command = Command::new("systemctl");
         for arg in &self.default_args {
             command.arg(arg);
@@ -49,6 +50,13 @@ impl Systemd {
         }
         let output = command.output().expect("Failed to execute command");
         output
+    }
+
+    fn exec_command(&self, args: Vec<&str>, command: &str) {
+        // Fully replaces current process with new process
+        Command::new(command)
+            .args(args)
+            .exec();
     }
 
     pub fn install(&self, service: &str, unit: &Unit) {
@@ -71,23 +79,23 @@ impl Systemd {
     }
 
     pub fn daemon_reload(&self) {
-        self.run_command(vec!["daemon-reload"]);
+        self.run_systemctl(vec!["daemon-reload"]);
     }
 
     pub fn start(&self, service: &str) {
-        self.run_command(vec!["start", service]);
+        self.run_systemctl(vec!["start", service]);
     }
 
     pub fn stop(&self, service: &str) {
-        self.run_command(vec!["stop", service]);
+        self.run_systemctl(vec!["stop", service]);
     }
 
     pub fn restart(&self, service: &str) {
-        self.run_command(vec!["restart", service]);
+        self.run_systemctl(vec!["restart", service]);
     }
 
     pub fn reload(&self, service: &str) {
-        self.run_command(vec!["reload", service]);
+        self.run_systemctl(vec!["reload", service]);
     }
 
     pub fn is_active(&self, service: &str) -> bool {
@@ -100,11 +108,11 @@ impl Systemd {
     }
 
     pub fn enable(&self, service: &str) {
-        self.run_command(vec!["enable", service]);
+        self.run_systemctl(vec!["enable", service]);
     }
 
     pub fn disable(&self, service: &str) {
-        self.run_command(vec!["disable", service]);
+        self.run_systemctl(vec!["disable", service]);
     }
 
     pub fn is_enabled(&self, service: &str) -> bool {
@@ -117,7 +125,7 @@ impl Systemd {
     }
 
     pub fn status(&self, service: &str) -> std::process::Output {
-        self.run_command(vec!["status", service])
+        self.run_systemctl(vec!["status", service])
     }
 
     pub fn list_unit_files(&self, pattern: Option<&str>) -> std::process::Output {
@@ -125,6 +133,12 @@ impl Systemd {
         if let Some(pattern) = pattern {
             args.push(pattern);
         }
-        self.run_command(args)
+        self.run_systemctl(args)
+    }
+
+    pub fn logs(&self, service: &str) {
+        let mut args = self.default_args.clone();
+        args.extend(vec!["--follow", "--full", "--unit", service]);
+        self.exec_command(args, "journalctl")
     }
 }

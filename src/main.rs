@@ -69,6 +69,11 @@ enum Command {
         #[arg(index = 1)]
         url: String,
     },
+    #[command(about = "Get logs of a process", aliases = & ["log"])]
+    Logs {
+        #[arg(index = 1)]
+        name: String,
+    },
 }
 
 fn main() {
@@ -164,6 +169,12 @@ fn main() {
         Some(Command::Agent { url }) => {
             // Handle agent command
             println!("Agent command executed: url={}", url);
+        }
+        Some(Command::Logs { name }) => {
+            // Handle log command
+            println!("Log command executed: name={}", name);
+            let service_name = format!("lpm-{}", name);
+            systemd.logs(&service_name);
         }
         None => {
             // No command provided
