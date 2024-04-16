@@ -1,9 +1,8 @@
 mod systemd;
 
-use std::process::exit;
+use clap::Parser;
 use is_root::is_root;
-
-use clap::{Parser};
+use std::process::exit;
 
 #[derive(Parser)]
 #[command(name = "lpm", version, about = "A CLI for managing processes")]
@@ -88,16 +87,24 @@ fn main() {
             // Handle setup command
             println!("Setup command executed");
         }
-        Some(Command::Run { command, description, copy_env, unit, service, install, name }) => {
+        Some(Command::Run {
+            command,
+            description,
+            copy_env,
+            unit,
+            service,
+            install,
+            name,
+        }) => {
             // Handle run command
-            println!("Run command executed: command={}, copy_env={}, unit={:?}, name={:?}", command, copy_env, unit, name);
+            println!(
+                "Run command executed: command={}, copy_env={}, unit={:?}, name={:?}",
+                command, copy_env, unit, name
+            );
 
-            let mut unit_unit = vec![
-                ("Description".to_string(), description),
-            ];
-            let mut unit_service = vec![
-                ("ExecStart".to_string(), format!("/usr/bin/env {}", command)),
-            ];
+            let mut unit_unit = vec![("Description".to_string(), description)];
+            let mut unit_service =
+                vec![("ExecStart".to_string(), format!("/usr/bin/env {}", command))];
             let mut unit_install = vec![];
 
             let inputs = [&unit, &service, &install];
@@ -117,8 +124,18 @@ fn main() {
                 unit_service.push(("RestartSec".to_string(), "1".to_string()));
             }
 
-            if !unit_service.iter().any(|(key, _)| key == "WorkingDirectory") {
-                unit_service.push(("WorkingDirectory".to_string(), std::env::current_dir().unwrap().to_str().unwrap().to_string()));
+            if !unit_service
+                .iter()
+                .any(|(key, _)| key == "WorkingDirectory")
+            {
+                unit_service.push((
+                    "WorkingDirectory".to_string(),
+                    std::env::current_dir()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .to_string(),
+                ));
             }
 
             if copy_env {
@@ -163,11 +180,12 @@ fn main() {
             let output = systemd.list_unit_files(Some("lpm-*"));
 
             println!("Available units:");
-            let stdout = String::from_utf8(output.stdout).expect("Failed to convert stdout to string");
+            let stdout =
+                String::from_utf8(output.stdout).expect("Failed to convert stdout to string");
             for line in stdout.lines().skip(1).take(stdout.lines().count() - 2) {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() > 0 {
-                    println!("{}", parts[0][4..parts[0].len()-8].to_string());
+                    println!("{}", parts[0][4..parts[0].len() - 8].to_string());
                 }
             }
         }

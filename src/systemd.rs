@@ -1,16 +1,16 @@
+use ini::Ini;
 use std::env;
 use std::fs;
 use std::os::unix::process::CommandExt;
-use std::process::{Command};
-use ini::Ini;
+use std::process::Command;
 
-pub(crate) struct Unit {
-    pub(crate) unit: Vec<(String, String)>,
-    pub(crate) service: Vec<(String, String)>,
-    pub(crate) install: Vec<(String, String)>,
+pub struct Unit {
+    pub unit: Vec<(String, String)>,
+    pub service: Vec<(String, String)>,
+    pub install: Vec<(String, String)>,
 }
 
-pub(crate) struct Systemd {
+pub struct Systemd {
     default_args: Vec<&'static str>,
     services_path: String,
 }
@@ -36,8 +36,7 @@ impl Systemd {
 
     pub fn init(&self) {
         // Creates a services directory if it doesn't exist
-        fs::create_dir_all(&self.services_path)
-            .expect("Failed to create services directory");
+        fs::create_dir_all(&self.services_path).expect("Failed to create services directory");
     }
 
     fn run_systemctl(&self, args: Vec<&str>) -> std::process::Output {
@@ -60,23 +59,26 @@ impl Systemd {
     }
 
     fn exec_command(&self, args: Vec<&str>, command: &str) {
-        Command::new(command)
-            .args(args)
-            .exec();
+        Command::new(command).args(args).exec();
     }
 
     pub fn install(&self, service: &str, unit: &Unit) {
         let unit_path = format!("{}/{}.service", self.services_path, service);
         let mut ini = Ini::new();
 
-        for (section_name, section_data) in
-            [("Unit", &unit.unit), ("Service", &unit.service), ("Install", &unit.install)] {
+        for (section_name, section_data) in [
+            ("Unit", &unit.unit),
+            ("Service", &unit.service),
+            ("Install", &unit.install),
+        ] {
             for (key, value) in section_data {
-                ini.with_section(Some(section_name.to_string())).add(key, value);
+                ini.with_section(Some(section_name.to_string()))
+                    .add(key, value);
             }
         }
 
-        ini.write_to_file(unit_path).expect("Failed to write unit file");
+        ini.write_to_file(unit_path)
+            .expect("Failed to write unit file");
     }
 
     pub fn uninstall(&self, service: &str) {
