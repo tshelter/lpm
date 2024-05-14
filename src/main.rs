@@ -11,6 +11,10 @@ struct Cli {
     cmd: Option<Command>,
 }
 
+struct AgentDaemonArgs {
+    url: String,
+}
+
 #[derive(Parser)]
 enum Command {
     #[command(about = "Setup")]
@@ -74,6 +78,7 @@ enum Command {
         #[arg(index = 1)]
         name: String,
     },
+    AgentDaemon(AgentDaemonArgs),
 }
 
 fn main() {
@@ -202,6 +207,11 @@ fn main() {
         Some(Command::Logs { name }) => {
             let service_name = format!("lpm-{}", name);
             systemd.logs(&service_name);
+        }
+        Some(Command::AgentDaemon(args)) => {
+            println!("Currently agent daemon is not implemented");
+            println!("Agent URL: {}", args.url);
+            exit(1);
         }
         None => {
             println!("No command provided, use --help for usage information");
