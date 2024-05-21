@@ -1,14 +1,14 @@
-use clap::Parser;
-use crate::old_systemd::Systemd;
+use std::os::unix::prelude::CommandExt;
 
-#[derive(Parser)]
+#[derive(clap::Parser)]
 pub struct Start {
+    #[arg(index = 1, help = "The name of the service to start")]
     service: String,
 }
 
 impl Start {
-    pub fn execute(&self, systemd: Systemd) {
+    pub fn execute(&self, systemd: crate::systemd::Systemd) {
         let service_name = format!("lpm-{}", self.service);
-        systemd.exec_start(&service_name);
+        systemd.start(&service_name).exec();
     }
 }
