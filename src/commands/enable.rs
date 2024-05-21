@@ -2,14 +2,14 @@ use std::os::unix::prelude::CommandExt;
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
-pub struct Start {
-    #[arg(index = 1, help = "The name of the service to start")]
+pub struct Enable {
+    #[arg(index = 1, help = "The name of the service to enable")]
     service: String,
 }
 
-impl Start {
+impl Enable {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {
         let service_name = get_service_name(&self.service);
-        systemd.start(&service_name).exec();
+        systemd.enable(&service_name).exec();
     }
 }

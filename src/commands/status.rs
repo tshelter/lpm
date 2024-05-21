@@ -1,4 +1,5 @@
 use std::os::unix::prelude::CommandExt;
+use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Status {
@@ -8,7 +9,7 @@ pub struct Status {
 
 impl Status {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {
-        let service_name = format!("lpm-{}", self.service);
+        let service_name = get_service_name(&self.service);
         systemd.status(&service_name).exec();
     }
 }

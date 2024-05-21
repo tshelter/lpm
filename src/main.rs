@@ -14,6 +14,20 @@ enum Cli {
     Start(commands::start::Start),
     #[clap(name = "status", about = "Get the status of a service")]
     Status(commands::status::Status),
+    #[clap(name = "stop", about = "Stop a service")]
+    Stop(commands::stop::Stop),
+    #[clap(name = "restart", about = "Restart a service")]
+    Restart(commands::restart::Restart),
+    #[clap(name = "enable", about = "Enable a service")]
+    Enable(commands::enable::Enable),
+    #[clap(name = "disable", about = "Disable a service")]
+    Disable(commands::disable::Disable),
+    #[clap(name = "reload", about = "Reload a service")]
+    Reload(commands::reload::Reload),
+    #[clap(name = "logs", about = "Display logs for a service")]
+    Logs(commands::logs::Logs),
+    #[clap(name = "remove", about = "Remove a service")]
+    Remove(commands::remove::Remove),
 }
 
 impl Cli {
@@ -22,6 +36,13 @@ impl Cli {
             Self::Run(run) => run.execute(systemd),
             Self::Start(start) => start.execute(systemd),
             Self::Status(status) => status.execute(systemd),
+            Self::Stop(stop) => stop.execute(systemd),
+            Self::Restart(restart) => restart.execute(systemd),
+            Self::Enable(enable) => enable.execute(systemd),
+            Self::Disable(disable) => disable.execute(systemd),
+            Self::Reload(reload) => reload.execute(systemd),
+            Self::Logs(logs) => logs.execute(systemd),
+            Self::Remove(remove) => remove.execute(systemd),
             _ => Cli::command().print_help().unwrap(),
         }
     }

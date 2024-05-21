@@ -10,10 +10,17 @@ pub struct Unit {
 }
 
 pub struct Systemd {
+    user_mode: bool,
     default_args: Vec<&'static str>,
     services_path: String,  // without trailing slash
     pub default_target: String,
 }
+
+const INITIALIZATION_ERROR: &str = r#"
+Failed to initialize LPM. Please make sure that:
+- Environment variables are set correctly: (XDG_RUNTIME_DIR)
+- Default path for XDG_RUNTIME_DIR - /run/user/$UID exists
+"#;
 
 impl Systemd {
     pub fn new(user_mode: bool) -> Self {
@@ -29,6 +36,7 @@ impl Systemd {
         };
 
         Systemd {
+            user_mode,
             default_args,
             services_path,
             default_target: if user_mode {
@@ -39,14 +47,42 @@ impl Systemd {
         }
     }
 
+    #[inline(always)]
     pub fn init(&self) {
         // Creates a services directory if it doesn't exist
         fs::create_dir_all(&self.services_path).expect("Failed to create services directory");
+
+        if self.user_mode {
+            if env::var("XDG_RUNTIME_DIR").is_err() {
+                let user_id = env::var("UID").unwrap();
+                let xdg_runtime_dir = format!("/run/user/{}", user_id);
+
+                if !fs::metadata(&xdg_runtime_dir).is_ok() {
+                    fs::create_dir_all(&xdg_runtime_dir).expect(INITIALIZATION_ERROR);
+                }
+
+                env::set_var("XDG_RUNTIME_DIR", &xdg_runtime_dir);
+            }
+
+        }
     }
 
     #[inline(always)]
     fn systemctl(&self, args: Vec<&str>) -> Command {
+        // TODO: change args to Vec<String>
         let mut command = Command::new("systemctl");
+        for arg in &self.default_args {
+            command.arg(arg);
+        }
+        for arg in args {
+            command.arg(arg);
+        }
+        command
+    }
+
+    #[inline(always)]
+    pub fn journalctl(&self, args: Vec<String>) -> Command {
+        let mut command = Command::new("journalctl");
         for arg in &self.default_args {
             command.arg(arg);
         }

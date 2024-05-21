@@ -1,3 +1,5 @@
+use crate::commands::get_service_name;
+
 #[derive(clap::Parser)]
 pub struct Run {
     #[arg(index = 1, help = "The command to run as a service. Wrap 'command in quotes' to pass arguments.")]
@@ -78,7 +80,7 @@ impl Run {
             install: unit_install,
         };
 
-        let service_name = format!("lpm-{}", self.name);
+        let service_name = get_service_name(&self.name);
         systemd.install_service(&service_name, &unit);
         systemd.daemon_reload().spawn().expect("Failed to reload systemd");
         systemd.enable(&service_name).spawn().expect("Failed to enable service");
