@@ -28,6 +28,8 @@ enum Cli {
     Logs(commands::logs::Logs),
     #[clap(name = "remove", about = "Remove a service")]
     Remove(commands::remove::Remove),
+    #[clap(name = "list", about = "List services")]
+    List(commands::list::List),
 }
 
 impl Cli {
@@ -43,6 +45,7 @@ impl Cli {
             Self::Reload(reload) => reload.execute(systemd),
             Self::Logs(logs) => logs.execute(systemd),
             Self::Remove(remove) => remove.execute(systemd),
+            Self::List(list) => list.execute(systemd),
             _ => Cli::command().print_help().unwrap(),
         }
     }

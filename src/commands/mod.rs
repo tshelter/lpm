@@ -1,5 +1,6 @@
 pub mod disable;
 pub mod enable;
+pub mod list;
 pub mod logs;
 pub mod reload;
 pub mod remove;

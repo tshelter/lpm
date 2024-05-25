@@ -2,6 +2,15 @@ use ini::Ini;
 use std::env;
 use std::fs;
 use std::process::Command;
+use tabled::Tabled;
+
+#[derive(Tabled)]
+pub struct Service {
+    pub name: String,
+    pub is_active: bool,
+    pub is_enabled: bool,
+    pub memory: String,
+}
 
 pub struct Unit {
     pub unit: Vec<(String, String)>,
@@ -125,6 +134,14 @@ impl Systemd {
     pub fn daemon_reload(&self) -> Command {
         self.systemctl(vec!["daemon-reload"])
     }
+
+    pub fn list_unit_files(&self, pattern: Option<&str>) -> Command {
+        let mut args = vec!["list-unit-files"];
+        if let Some(pattern) = pattern {
+            args.push(pattern);
+        }
+        self.systemctl(args)
+    }
 }
 
 impl Systemd {
@@ -150,5 +167,28 @@ impl Systemd {
     pub fn uninstall_service(&self, service: &str) {
         let unit_path = format!("{}/{}.service", self.services_path, service);
         fs::remove_file(unit_path).expect("Failed to remove unit file");
+    }
+
+    pub fn get_services(&self) -> Vec<Service> {
+        let output = self.list_unit_files(Some("lpm-*.service")).output().unwrap();
+        let output = String::from_utf8(output.stdout).unwrap();
+        output.lines().filter(|line| line.contains("lpm-")).map(|line| {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            let service = parts[0].trim_end_matches(".service");
+            let is_enabled = parts[1] == "enabled";
+            let status = self.status(service).output().unwrap();
+            let status = String::from_utf8(status.stdout).unwrap();
+            let is_active = status.contains("Active: active");
+            // or "" and include only second part
+            let memory = status.lines().find(|line| line.contains("Memory:")).unwrap_or("").split_whitespace().last().unwrap_or("").to_string();
+            // remove lpm- prefix from service name and .service suffix from service name
+            let name = service.trim_start_matches("lpm-").trim_end_matches(".service").to_string();
+            Service {
+                name,
+                is_active,
+                is_enabled,
+                memory,
+            }
+        }).collect::<Vec<Service>>()
     }
 }

@@ -9,3 +9,4 @@ rust-ini = { git = "https://github.com/zonyitoo/rust-ini/", rev="ecad660a0596015
 is-root = "0.1.3"
 # dbus = "0.9.7"
 clap = { version = "4.5.4", features = ["derive"] }
+tabled = "0.15.0"
