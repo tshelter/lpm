@@ -1,4 +1,4 @@
-use std::os::unix::prelude::CommandExt;
+
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
@@ -14,6 +14,5 @@ impl Remove {
         systemd.stop(&service_name).spawn().expect("Failed to stop service");
         systemd.uninstall_service(&service_name);
         systemd.daemon_reload().spawn().expect("Failed to stop service");
-        println!("Service {} was removed", &service_name)
     }
 }

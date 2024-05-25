@@ -2,7 +2,6 @@ mod commands;
 mod systemd;
 
 use clap::Parser;
-use clap::CommandFactory;
 use is_root::is_root;
 
 
@@ -46,7 +45,6 @@ impl Cli {
             Self::Logs(logs) => logs.execute(systemd),
             Self::Remove(remove) => remove.execute(systemd),
             Self::List(list) => list.execute(systemd),
-            _ => Cli::command().print_help().unwrap(),
         }
     }
 }

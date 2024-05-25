@@ -43,20 +43,17 @@ impl Run {
             }
         }
 
-        if !unit_service.iter().any(|(key, _)| key == "Restart") {
+        if has_not_key(&unit_unit, "Restart") {
             unit_service.push(("Restart".to_string(), "always".to_string()));
         }
-        if !unit_service.iter().any(|(key, _)| key == "RestartSec") {
+        if has_not_key(&unit_unit, "RestartSec") {
             unit_service.push(("RestartSec".to_string(), "1".to_string()));
         }
-        if !unit_install.iter().any(|(key, _)| key == "WantedBy") {
+        if has_not_key(&unit_unit, "WantedBy") {
             unit_install.push(("WantedBy".to_string(), systemd.default_target.clone()));
         }
 
-        if !unit_service
-            .iter()
-            .any(|(key, _)| key == "WorkingDirectory")
-        {
+        if has_not_key(&unit_service, "WorkingDirectory") {
             unit_service.push((
                 "WorkingDirectory".to_string(),
                 std::env::current_dir()
@@ -85,6 +82,5 @@ impl Run {
         systemd.daemon_reload().spawn().expect("Failed to reload systemd");
         systemd.enable(&service_name).spawn().expect("Failed to enable service");
         systemd.restart(&service_name).spawn().expect("Failed to restart service");
-        println!("Service {} was created. Run `lpm status {}` to check the status.", self.name, self.name);
     }
 }

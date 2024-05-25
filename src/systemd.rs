@@ -166,7 +166,9 @@ impl Systemd {
 
     pub fn uninstall_service(&self, service: &str) {
         let unit_path = format!("{}/{}.service", self.services_path, service);
-        fs::remove_file(unit_path).expect("Failed to remove unit file");
+        fs::remove_file(unit_path).unwrap_or_else(|_| {
+            println!("Failed to remove unit file");
+        });
     }
 
     pub fn get_services(&self) -> Vec<Service> {
