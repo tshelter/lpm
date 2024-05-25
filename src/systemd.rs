@@ -1,7 +1,8 @@
-use ini::Ini;
 use std::env;
 use std::fs;
 use std::process::Command;
+
+use ini::Ini;
 use tabled::Tabled;
 
 #[derive(Tabled)]
@@ -21,7 +22,7 @@ pub struct Unit {
 pub struct Systemd {
     user_mode: bool,
     default_args: Vec<&'static str>,
-    services_path: String,  // without trailing slash
+    services_path: String, // without trailing slash
     pub default_target: String,
 }
 
@@ -52,7 +53,7 @@ impl Systemd {
                 "default.target".to_string()
             } else {
                 "multi-user.target".to_string()
-            }
+            },
         }
     }
 
@@ -72,7 +73,6 @@ impl Systemd {
 
                 env::set_var("XDG_RUNTIME_DIR", &xdg_runtime_dir);
             }
-
         }
     }
 
@@ -172,25 +172,46 @@ impl Systemd {
     }
 
     pub fn get_services(&self) -> Vec<Service> {
-        let output = self.list_unit_files(Some("lpm-*.service")).output().unwrap();
+        let output = self
+            .list_unit_files(Some("lpm-*.service"))
+            .output()
+            .expect("Failed to list unit files");
         let output = String::from_utf8(output.stdout).unwrap();
-        output.lines().filter(|line| line.contains("lpm-")).map(|line| {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            let service = parts[0].trim_end_matches(".service");
-            let is_enabled = parts[1] == "enabled";
-            let status = self.status(service).output().unwrap();
-            let status = String::from_utf8(status.stdout).unwrap();
-            let is_active = status.contains("Active: active");
-            // or "" and include only second part
-            let memory = status.lines().find(|line| line.contains("Memory:")).unwrap_or("").split_whitespace().last().unwrap_or("").to_string();
-            // remove lpm- prefix from service name and .service suffix from service name
-            let name = service.trim_start_matches("lpm-").trim_end_matches(".service").to_string();
-            Service {
-                name,
-                is_active,
-                is_enabled,
-                memory,
-            }
-        }).collect::<Vec<Service>>()
+        output
+            .lines()
+            .filter(|line| line.contains("lpm-"))
+            .map(|line| {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                let service = parts[0].trim_end_matches(".service");
+                let is_enabled = parts[1] == "enabled";
+                let status = self
+                    .status(service)
+                    .output()
+                    .expect("Failed to get status of service");
+                let status =
+                    String::from_utf8(status.stdout).expect("Failed to get status of service");
+                let is_active = status.contains("Active: active");
+                // or "" and include only second part
+                let memory = status
+                    .lines()
+                    .find(|line| line.contains("Memory:"))
+                    .unwrap_or("")
+                    .split_whitespace()
+                    .last()
+                    .unwrap_or("")
+                    .to_string();
+                // remove lpm- prefix from service name and .service suffix from service name
+                let name = service
+                    .trim_start_matches("lpm-")
+                    .trim_end_matches(".service")
+                    .to_string();
+                Service {
+                    name,
+                    is_active,
+                    is_enabled,
+                    memory,
+                }
+            })
+            .collect::<Vec<Service>>()
     }
 }

@@ -1,9 +1,8 @@
-mod commands;
-mod systemd;
-
 use clap::Parser;
 use is_root::is_root;
 
+mod commands;
+mod systemd;
 
 #[derive(Parser)]
 enum Cli {
@@ -48,7 +47,6 @@ impl Cli {
         }
     }
 }
-
 
 fn main() {
     let cli = Cli::parse();

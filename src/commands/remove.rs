@@ -1,4 +1,3 @@
-
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
@@ -10,9 +9,18 @@ pub struct Remove {
 impl Remove {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {
         let service_name = get_service_name(&self.service);
-        systemd.disable(&service_name).spawn().expect("Failed to disable service");
-        systemd.stop(&service_name).spawn().expect("Failed to stop service");
+        systemd
+            .disable(&service_name)
+            .status()
+            .expect("Failed to disable service");
+        systemd
+            .stop(&service_name)
+            .status()
+            .expect("Failed to stop service");
         systemd.uninstall_service(&service_name);
-        systemd.daemon_reload().spawn().expect("Failed to stop service");
+        systemd
+            .daemon_reload()
+            .status()
+            .expect("Failed to stop service");
     }
 }

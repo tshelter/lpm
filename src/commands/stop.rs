@@ -1,4 +1,5 @@
 use std::os::unix::prelude::CommandExt;
+
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]

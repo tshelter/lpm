@@ -1,8 +1,7 @@
-use tabled::{Table};
+use tabled::Table;
 
 #[derive(clap::Parser)]
-pub struct List {
-}
+pub struct List {}
 
 impl List {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {

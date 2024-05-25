@@ -2,21 +2,40 @@ use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Run {
-    #[arg(index = 1, help = "The command to run as a service. Wrap 'command in quotes' to pass arguments.")]
+    #[arg(
+        index = 1,
+        help = "The command to run as a service. Wrap 'command in quotes' to pass arguments."
+    )]
     command: String,
     #[arg(short, long, help = "The name of the service")]
     name: String,
-
-    #[arg(short = 'e', long, default_value = "false", help = "Copy the current environment to the service. Usually not required.")]
+    #[arg(
+        short = 'e',
+        long,
+        default_value = "false",
+        help = "Copy the current environment to the service. Usually not required."
+    )]
     copy_env: bool,
 
     #[arg(short, long, default_value = "", help = "A description of the service")]
     description: String,
-    #[arg(short, long, help = "List of key=value pairs for the [Unit] section of the service file")]
+    #[arg(
+        short,
+        long,
+        help = "List of key=value pairs for the [Unit] section of the service file"
+    )]
     unit: Vec<String>,
-    #[arg(short, long, help = "List of key=value pairs for the [Service] section of the service file")]
+    #[arg(
+        short,
+        long,
+        help = "List of key=value pairs for the [Service] section of the service file"
+    )]
     service: Vec<String>,
-    #[arg(short, long, help = "List of key=value pairs for the [Install] section of the service file")]
+    #[arg(
+        short,
+        long,
+        help = "List of key=value pairs for the [Install] section of the service file"
+    )]
     install: Vec<String>,
 }
 
@@ -27,10 +46,11 @@ fn has_not_key(section: &Vec<(String, String)>, key: &str) -> bool {
 
 impl Run {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {
-
         let mut unit_unit = vec![("Description".to_string(), self.description.clone())];
-        let mut unit_service =
-            vec![("ExecStart".to_string(), format!("/usr/bin/env {}", self.command))];
+        let mut unit_service = vec![(
+            "ExecStart".to_string(),
+            format!("/usr/bin/env {}", self.command),
+        )];
         let mut unit_install = vec![];
 
         let inputs = [&self.unit, &self.service, &self.install];
@@ -57,9 +77,9 @@ impl Run {
             unit_service.push((
                 "WorkingDirectory".to_string(),
                 std::env::current_dir()
-                    .unwrap()
+                    .expect("Failed to get current directory")
                     .to_str()
-                    .unwrap()
+                    .expect("Failed to convert current directory path to string")
                     .to_string(),
             ));
         }
@@ -79,8 +99,17 @@ impl Run {
 
         let service_name = get_service_name(&self.name);
         systemd.install_service(&service_name, &unit);
-        systemd.daemon_reload().spawn().expect("Failed to reload systemd");
-        systemd.enable(&service_name).spawn().expect("Failed to enable service");
-        systemd.restart(&service_name).spawn().expect("Failed to restart service");
+        systemd
+            .daemon_reload()
+            .status()
+            .expect("Failed to reload systemd");
+        systemd
+            .enable(&service_name)
+            .status()
+            .expect("Failed to enable service");
+        systemd
+            .restart(&service_name)
+            .status()
+            .expect("Failed to restart service");
     }
 }
