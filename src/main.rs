@@ -24,9 +24,9 @@ enum Cli {
     Reload(commands::reload::Reload),
     #[clap(name = "logs", about = "Display logs for a service")]
     Logs(commands::logs::Logs),
-    #[clap(name = "remove", about = "Remove a service")]
+    #[clap(name = "remove", about = "Remove a service", aliases = &["rm", "delete", "del"])]
     Remove(commands::remove::Remove),
-    #[clap(name = "list", about = "List services")]
+    #[clap(name = "list", about = "List services", aliases = &["ls", "l"])]
     List(commands::list::List),
 }
 
