@@ -9,7 +9,7 @@ enum Cli {
     Run(commands::run::Run),
     #[clap(name = "start", about = "Start a service")]
     Start(commands::start::Start),
-    #[clap(name = "status", about = "Get the status of a service")]
+    #[clap(name = "status", about = "Get the status of a service", aliases = &["info"])]
     Status(commands::status::Status),
     #[clap(name = "stop", about = "Stop a service")]
     Stop(commands::stop::Stop),
@@ -27,6 +27,8 @@ enum Cli {
     Remove(commands::remove::Remove),
     #[clap(name = "list", about = "List services", aliases = &["ls", "l"])]
     List(commands::list::List),
+    #[clap(name = "cat", about = "Print the service file for a service")]
+    Cat(commands::cat::Cat),
 }
 
 impl Cli {
@@ -43,6 +45,7 @@ impl Cli {
             Self::Logs(logs) => logs.execute(systemd),
             Self::Remove(remove) => remove.execute(systemd),
             Self::List(list) => list.execute(systemd),
+            Self::Cat(cat) => cat.execute(systemd),
         }
     }
 }

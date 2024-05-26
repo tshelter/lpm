@@ -144,6 +144,10 @@ impl Systemd {
         }
         self.systemctl(args)
     }
+
+    pub fn cat(&self, service: &str) -> Command {
+        self.systemctl(vec!["cat", service])
+    }
 }
 
 impl Systemd {
