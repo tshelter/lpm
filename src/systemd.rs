@@ -30,6 +30,8 @@ const INITIALIZATION_ERROR: &str = r#"
 Failed to initialize LPM. Please make sure that:
 - Environment variables are set correctly: (XDG_RUNTIME_DIR)
 - Default path for XDG_RUNTIME_DIR - /run/user/$UID exists
+Ensure that linger is enabled for the user by running:
+$ loginctl enable-linger $USER
 "#;
 
 impl Systemd {
@@ -64,13 +66,9 @@ impl Systemd {
 
         if self.user_mode {
             if env::var("XDG_RUNTIME_DIR").is_err() {
-                let user_id = env::var("UID").unwrap();
+                let user_id = users::get_current_uid();
                 let xdg_runtime_dir = format!("/run/user/{}", user_id);
-
-                if !fs::metadata(&xdg_runtime_dir).is_ok() {
-                    fs::create_dir_all(&xdg_runtime_dir).expect(INITIALIZATION_ERROR);
-                }
-
+                fs::metadata(format!("{}/bus", xdg_runtime_dir)).expect(INITIALIZATION_ERROR);
                 env::set_var("XDG_RUNTIME_DIR", &xdg_runtime_dir);
             }
         }

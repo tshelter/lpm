@@ -1,5 +1,4 @@
 use clap::Parser;
-use is_root::is_root;
 
 mod commands;
 mod systemd;
@@ -50,7 +49,7 @@ impl Cli {
 
 fn main() {
     let cli = Cli::parse();
-    let user_mode = !is_root();
+    let user_mode = users::get_current_uid() != 0;
     let systemd = systemd::Systemd::new(user_mode);
     systemd.init();
     cli.execute(systemd);
