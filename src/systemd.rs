@@ -28,8 +28,9 @@ pub struct Systemd {
 
 const INITIALIZATION_ERROR: &str = r#"
 Failed to initialize LPM. Please make sure that:
-- Environment variables are set correctly: (XDG_RUNTIME_DIR)
+- Environment variables are set correctly: (XDG_RUNTIME_DIR or DBUS_SESSION_BUS_ADDRESS)
 - Default path for XDG_RUNTIME_DIR - /run/user/$UID exists
+- Default path for dbus - $XDG_RUNTIME_DIR/bus exists
 Ensure that linger is enabled for the user by running:
 $ loginctl enable-linger $USER
 "#;
@@ -65,6 +66,9 @@ impl Systemd {
         fs::create_dir_all(&self.services_path).expect("Failed to create services directory");
 
         if self.user_mode {
+            if env::var("DBUS_SESSION_BUS_ADDRESS").is_ok() {
+                return;
+            }
             if env::var("XDG_RUNTIME_DIR").is_err() {
                 let user_id = users::get_current_uid();
                 let xdg_runtime_dir = format!("/run/user/{}", user_id);
