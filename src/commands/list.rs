@@ -12,11 +12,9 @@ impl List {
 
         if self.raw {
             for service in services {
-                println!("{} {} {} {}",
-                    service.name,
-                    service.is_active,
-                    service.is_enabled,
-                    service.memory,
+                println!(
+                    "{} {} {} {}",
+                    service.name, service.is_active, service.is_enabled, service.memory,
                 );
             }
         } else {
