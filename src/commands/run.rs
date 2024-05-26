@@ -67,13 +67,13 @@ impl Run {
             unit_unit.push(("StartLimitIntervalSec".to_string(), "0".to_string()));
         }
 
-        if has_not_key(&unit_unit, "Restart") {
+        if has_not_key(&unit_service, "Restart") {
             unit_service.push(("Restart".to_string(), "always".to_string()));
         }
-        if has_not_key(&unit_unit, "RestartSec") {
+        if has_not_key(&unit_service, "RestartSec") {
             unit_service.push(("RestartSec".to_string(), "1".to_string()));
         }
-        if has_not_key(&unit_unit, "WantedBy") {
+        if has_not_key(&unit_service, "WantedBy") {
             unit_install.push(("WantedBy".to_string(), systemd.default_target.clone()));
         }
 
