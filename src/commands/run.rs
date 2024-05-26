@@ -63,6 +63,10 @@ impl Run {
             }
         }
 
+        if has_not_key(&unit_unit, "StartLimitIntervalSec") {
+            unit_unit.push(("StartLimitIntervalSec".to_string(), "0".to_string()));
+        }
+
         if has_not_key(&unit_unit, "Restart") {
             unit_service.push(("Restart".to_string(), "always".to_string()));
         }

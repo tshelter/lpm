@@ -22,7 +22,7 @@ enum Cli {
     Disable(commands::disable::Disable),
     #[clap(name = "reload", about = "Reload a service")]
     Reload(commands::reload::Reload),
-    #[clap(name = "logs", about = "Display logs for a service")]
+    #[clap(name = "logs", about = "Display logs for a service", aliases = &["log"])]
     Logs(commands::logs::Logs),
     #[clap(name = "remove", about = "Remove a service", aliases = &["rm", "delete", "del"])]
     Remove(commands::remove::Remove),
