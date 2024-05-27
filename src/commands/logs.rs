@@ -10,8 +10,13 @@ pub struct Logs {
     lines: Option<usize>,
     #[arg(short = 'f', long, help = "Follow the logs", default_value = "false")]
     follow: bool,
-    #[arg(short = 'x', long, help = "Show the extended logs", default_value = "false")]
-    catalog: bool
+    #[arg(
+        short = 'x',
+        long,
+        help = "Show the extended logs",
+        default_value = "false"
+    )]
+    catalog: bool,
 }
 
 impl Logs {

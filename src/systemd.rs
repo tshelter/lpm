@@ -207,10 +207,7 @@ impl Systemd {
                     .unwrap_or("")
                     .to_string();
                 // remove lpm- prefix from service name and .service suffix from service name
-                let name = service
-                    .trim_start_matches("lpm-")
-                    .trim_end_matches(".service")
-                    .to_string();
+                let name = trim_start_once(trim_end_once(service, ".service"), "lpm-").to_string();
                 Service {
                     name,
                     is_active,
@@ -220,4 +217,14 @@ impl Systemd {
             })
             .collect::<Vec<Service>>()
     }
+}
+
+#[inline(always)]
+fn trim_start_once<'a>(s: &'a str, prefix: &str) -> &'a str {
+    s.strip_prefix(prefix).unwrap_or(s)
+}
+
+#[inline(always)]
+fn trim_end_once<'a>(s: &'a str, suffix: &str) -> &'a str {
+    s.strip_suffix(suffix).unwrap_or(s)
 }
