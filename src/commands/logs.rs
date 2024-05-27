@@ -10,6 +10,8 @@ pub struct Logs {
     lines: Option<usize>,
     #[arg(short = 'f', long, help = "Follow the logs", default_value = "false")]
     follow: bool,
+    #[arg(short = 'x', long, help = "Show the extended logs", default_value = "false")]
+    catalog: bool
 }
 
 impl Logs {
@@ -18,7 +20,6 @@ impl Logs {
         let mut args = vec![
             "--unit".to_string(),
             service_name,
-            "--catalog".to_string(),
             "--pager-end".to_string(),
         ];
         if let Some(lines) = self.lines {
@@ -27,6 +28,9 @@ impl Logs {
         }
         if self.follow {
             args.push("--follow".to_string());
+        }
+        if self.catalog {
+            args.push("--catalog".to_string());
         }
 
         systemd.journalctl(args).exec();
