@@ -4,7 +4,7 @@ use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Cat {
-    #[arg(index = 1, help = "The name of the service to cat of")]
+    /// The name of the service to cat of
     service: String,
 }
 

@@ -2,46 +2,30 @@ use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Run {
-    #[arg(
-        index = 1,
-        help = "The command to run as a service. Wrap 'command in quotes' to pass arguments."
-    )]
-    command: String,
-    #[arg(short, long, help = "The name of the service")]
+    /// The name of the service
+    #[arg(short, long)]
     name: String,
-    #[arg(
-        short = 'e',
-        long,
-        default_value = "false",
-        help = "Copy the current environment to the service. Usually not required."
-    )]
+    /// Copy the current environment to the service. Usually not required.
+    #[arg(short = 'e', long, default_value_t)]
     copy_env: bool,
-
-    #[arg(short, long, default_value = "", help = "A description of the service")]
+    /// A description of the service
+    #[arg(short, long, default_value_t)]
     description: String,
-    #[arg(
-        short,
-        long,
-        help = "List of key=value pairs for the [Unit] section of the service file"
-    )]
+    /// List of key=value pairs for the [Unit] section of the service file
+    #[arg(short, long)]
     unit: Vec<String>,
-    #[arg(
-        short,
-        long,
-        help = "List of key=value pairs for the [Service] section of the service file"
-    )]
+    /// List of key=value pairs for the [Service] section of the service file
+    #[arg(short, long)]
     service: Vec<String>,
-    #[arg(
-        short,
-        long,
-        help = "List of key=value pairs for the [Install] section of the service file"
-    )]
+    /// "List of key=value pairs for the [Install] section of the service file"
+    #[arg(short, long)]
     install: Vec<String>,
+    /// The command to run as a service. Wrap 'command in quotes' to pass arguments.
+    command: String,
 }
 
-#[inline(always)]
-fn has_not_key(section: &Vec<(String, String)>, key: &str) -> bool {
-    !section.iter().any(|(k, _)| k == key)
+fn has_not_key(section: impl AsRef<[(String, String)]>, key: &str) -> bool {
+    !section.as_ref().iter().any(|(k, _)| k == key)
 }
 
 impl Run {

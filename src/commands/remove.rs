@@ -1,8 +1,9 @@
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
+#[command(aliases = &["rm", "delete", "del"])]
 pub struct Remove {
-    #[arg(index = 1, help = "The name of the service to remove")]
+    /// The name of the service to remove
     service: String,
 }
 

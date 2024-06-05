@@ -4,7 +4,7 @@ use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Reload {
-    #[arg(index = 1, help = "The name of the service to reload")]
+    /// The name of the service to reload
     service: String,
 }
 

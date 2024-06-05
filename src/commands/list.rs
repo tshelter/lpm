@@ -1,8 +1,10 @@
 use tabled::Table;
 
 #[derive(clap::Parser)]
+#[command(aliases = &["ls", "l"])]
 pub struct List {
-    #[arg(short, long, help = "Show list in raw format", default_value = "false")]
+    /// Show list in raw format
+    #[arg(short, long, default_value_t)]
     raw: bool,
 }
 
