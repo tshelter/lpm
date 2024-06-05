@@ -20,7 +20,7 @@ impl List {
                 );
             }
         } else {
-            println!("{}", Table::new(&services).to_string());
+            println!("{}", Table::new(services));
         }
     }
 }

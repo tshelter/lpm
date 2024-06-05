@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::process::Command;
@@ -14,14 +15,14 @@ pub struct Service {
 }
 
 pub struct Unit {
-    pub unit: Vec<(String, String)>,
-    pub service: Vec<(String, String)>,
-    pub install: Vec<(String, String)>,
+    pub unit: HashMap<String, String>,
+    pub service: HashMap<String, String>,
+    pub install: HashMap<String, String>,
 }
 
 pub struct Systemd {
     user_mode: bool,
-    default_args: Vec<&'static str>,
+    default_args: Vec<String>,
     services_path: String, // without trailing slash
     pub default_target: String,
 }
@@ -39,7 +40,7 @@ impl Systemd {
     pub fn new(user_mode: bool) -> Self {
         let mut default_args = vec![];
         if user_mode {
-            default_args.push("--user");
+            default_args.push("--user".into());
         }
 
         let services_path = if user_mode {
@@ -73,68 +74,58 @@ impl Systemd {
                 let user_id = users::get_current_uid();
                 let xdg_runtime_dir = format!("/run/user/{}", user_id);
                 fs::metadata(format!("{}/bus", xdg_runtime_dir)).expect(INITIALIZATION_ERROR);
-                env::set_var("XDG_RUNTIME_DIR", &xdg_runtime_dir);
+                env::set_var("XDG_RUNTIME_DIR", xdg_runtime_dir);
             }
         }
     }
 
-    #[inline(always)]
-    fn systemctl(&self, args: Vec<&str>) -> Command {
-        // TODO: change args to Vec<String>
+    fn systemctl(&self, args: &[&str]) -> Command {
         let mut command = Command::new("systemctl");
-        for arg in &self.default_args {
-            command.arg(arg);
-        }
-        for arg in args {
-            command.arg(arg);
-        }
+        command.args(&self.default_args);
+        command.args(args);
         command
     }
 
     #[inline(always)]
     pub fn journalctl(&self, args: Vec<String>) -> Command {
         let mut command = Command::new("journalctl");
-        for arg in &self.default_args {
-            command.arg(arg);
-        }
-        for arg in args {
-            command.arg(arg);
-        }
+        command.args(&self.default_args);
+        command.args(&args);
         command
     }
 }
 
 impl Systemd {
     pub fn start(&self, service: &str) -> Command {
-        self.systemctl(vec!["start", service])
+        self.systemctl(&["start", service])
     }
 
     pub fn stop(&self, service: &str) -> Command {
-        self.systemctl(vec!["stop", service])
+        self.systemctl(&["stop", service])
     }
 
     pub fn restart(&self, service: &str) -> Command {
-        self.systemctl(vec!["restart", service])
+        self.systemctl(&["restart", service])
     }
 
     pub fn reload(&self, service: &str) -> Command {
-        self.systemctl(vec!["reload", service])
+        self.systemctl(&["reload", service])
     }
 
     pub fn enable(&self, service: &str) -> Command {
-        self.systemctl(vec!["enable", service])
+        self.systemctl(&["enable", service])
     }
 
     pub fn disable(&self, service: &str) -> Command {
-        self.systemctl(vec!["disable", service])
+        self.systemctl(&["disable", service])
     }
 
     pub fn status(&self, service: &str) -> Command {
-        self.systemctl(vec!["status", service])
+        self.systemctl(&["status", service])
     }
 
     pub fn daemon_reload(&self) -> Command {
-        self.systemctl(vec!["daemon-reload"])
+        self.systemctl(&["daemon-reload"])
     }
 
     pub fn list_unit_files(&self, pattern: Option<&str>) -> Command {
@@ -142,11 +133,11 @@ impl Systemd {
         if let Some(pattern) = pattern {
             args.push(pattern);
         }
-        self.systemctl(args)
+        self.systemctl(&args)
     }
 
     pub fn cat(&self, service: &str) -> Command {
-        self.systemctl(vec!["cat", service])
+        self.systemctl(&["cat", service])
     }
 }
 
@@ -172,8 +163,8 @@ impl Systemd {
 
     pub fn uninstall_service(&self, service: &str) {
         let unit_path = format!("{}/{}.service", self.services_path, service);
-        fs::remove_file(unit_path).unwrap_or_else(|_| {
-            println!("Failed to remove unit file");
+        fs::remove_file(unit_path).unwrap_or_else(|e| {
+            eprintln!("Failed to remove unit file {e}");
         });
     }
 
