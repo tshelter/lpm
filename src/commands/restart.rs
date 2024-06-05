@@ -4,7 +4,7 @@ use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Restart {
-    #[arg(index = 1, help = "The name of the service to restart")]
+    /// The name of the service to restart
     service: String,
 }
 

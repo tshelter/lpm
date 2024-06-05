@@ -3,20 +3,19 @@ use std::os::unix::prelude::CommandExt;
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
+#[command(aliases = &["log"])]
 pub struct Logs {
-    #[arg(index = 1, help = "The name of the service to display logs for")]
-    service: String,
-    #[arg(short = 'n', long, help = "Number of lines to display")]
+    /// Number of lines to display
+    #[arg(short = 'n', long)]
     lines: Option<usize>,
-    #[arg(short = 'f', long, help = "Follow the logs", default_value = "false")]
+    /// Follow the logs
+    #[arg(short = 'f', long, default_value_t)]
     follow: bool,
-    #[arg(
-        short = 'x',
-        long,
-        help = "Show the extended logs",
-        default_value = "false"
-    )]
+    /// Show the extended logs
+    #[arg(short = 'x', long, default_value_t)]
     catalog: bool,
+    /// The name of the service to display logs for
+    service: String,
 }
 
 impl Logs {
