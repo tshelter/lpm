@@ -27,7 +27,7 @@ pub struct Run {
 }
 
 impl Run {
-    pub fn execute(&self, mut systemd: crate::systemd::Systemd) {
+    pub fn execute(&self, systemd: crate::systemd::Systemd) {
         let mut unit_unit = HashMap::from([("Description".to_string(), self.description.clone())]);
         let mut unit_service = HashMap::from([(
             "ExecStart".to_string(),
