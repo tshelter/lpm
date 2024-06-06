@@ -47,16 +47,16 @@ impl Run {
 
         unit_service
             .entry("StartLimitIntervalSec".into())
-            .or_insert("0".into());
+            .or_insert_with(|| "0".into());
         unit_service
             .entry("Restart".into())
-            .or_insert("always".into());
+            .or_insert_with(|| "always".into());
         unit_service
             .entry("RestartSec".into())
-            .or_insert("1".into());
+            .or_insert_with(|| "1".into());
         unit_service
             .entry("WantedBy".into())
-            .or_insert_with(|| take(&mut systemd.default_target));
+            .or_insert_with(|| systemd.default_target.clone());
         unit_service
             .entry("WorkingDirectory".into())
             .or_insert_with(|| {
