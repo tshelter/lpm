@@ -10,12 +10,18 @@ pub struct Run {
     #[arg(short, long, help = "The name of the service")]
     name: String,
     #[arg(
-        short = 'e',
+        short = 'E',
         long,
         default_value = "false",
-        help = "Copy the current environment to the service. Usually not required."
+        help = "Inherit the current environment to the service. Usually not required."
     )]
-    copy_env: bool,
+    inherit_env: bool,
+    #[arg(
+        short = 'e',
+        long,
+        help = "List of key=value pairs to pass to the service as environment variables"
+    )]
+    env: Vec<String>,
 
     #[arg(short, long, default_value = "", help = "A description of the service")]
     description: String,
@@ -46,11 +52,8 @@ fn has_not_key(section: &Vec<(String, String)>, key: &str) -> bool {
 
 impl Run {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {
-        let mut unit_unit = vec![("Description".to_string(), self.description.clone())];
-        let mut unit_service = vec![(
-            "ExecStart".to_string(),
-            format!("/usr/bin/env {}", self.command),
-        )];
+        let mut unit_unit = vec![];
+        let mut unit_service = vec![];
         let mut unit_install = vec![];
 
         let inputs = [&self.unit, &self.service, &self.install];
@@ -61,6 +64,13 @@ impl Run {
                 let parts: Vec<&str> = item.split('=').collect();
                 output.push((parts[0].to_string(), parts[1].to_string()));
             }
+        }
+
+        if has_not_key(&unit_unit, "Description") {
+            unit_unit.push(("Description".to_string(), self.description.clone()));
+        }
+        if has_not_key(&unit_service, "ExecStart") {
+            unit_service.push(("ExecStart".to_string(), format!("/usr/bin/env {}", self.command)));
         }
 
         if has_not_key(&unit_unit, "StartLimitIntervalSec") {
@@ -88,11 +98,15 @@ impl Run {
             ));
         }
 
-        if self.copy_env {
+        if self.inherit_env {
             let env = std::env::vars().collect::<Vec<(String, String)>>();
             for (key, value) in env {
                 unit_service.push(("Environment".to_string(), format!("{}='{}'", key, value)));
             }
+        }
+
+        for item in &self.env {
+            unit_service.push(("Environment".to_string(), item.clone()));
         }
 
         let unit = crate::systemd::Unit {
