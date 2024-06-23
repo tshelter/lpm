@@ -202,9 +202,11 @@ impl Systemd {
                     .lines()
                     .find(|line| line.contains("Memory:"))
                     .unwrap_or("")
-                    .split_whitespace()
-                    .last()
+                    .trim()
+                    .split_once(char::is_whitespace)
+                    .map(|(_, memory_str)| memory_str)
                     .unwrap_or("")
+                    .trim()
                     .to_string();
                 // remove lpm- prefix from service name and .service suffix from service name
                 let name = trim_start_once(trim_end_once(service, ".service"), "lpm-").to_string();
