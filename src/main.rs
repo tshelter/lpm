@@ -1,51 +1,57 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 mod commands;
 mod systemd;
 
 #[derive(Parser)]
-enum Cli {
-    #[clap(name = "run", about = "Run a command as a service")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Run a command as a service
     Run(commands::run::Run),
-    #[clap(name = "start", about = "Start a service")]
+    /// Start a service
     Start(commands::start::Start),
-    #[clap(name = "status", about = "Get the status of a service", aliases = &["info"])]
+    /// Get the status of a service
     Status(commands::status::Status),
-    #[clap(name = "stop", about = "Stop a service")]
+    /// Stop a service
     Stop(commands::stop::Stop),
-    #[clap(name = "restart", about = "Restart a service")]
+    /// Restart a service
     Restart(commands::restart::Restart),
-    #[clap(name = "enable", about = "Enable a service")]
+    /// Enable a service
     Enable(commands::enable::Enable),
-    #[clap(name = "disable", about = "Disable a service")]
+    /// Disable a service
     Disable(commands::disable::Disable),
-    #[clap(name = "reload", about = "Reload a service")]
+    /// Reload a service
     Reload(commands::reload::Reload),
-    #[clap(name = "logs", about = "Display logs for a service", aliases = &["log"])]
+    /// Display logs for a service
     Logs(commands::logs::Logs),
-    #[clap(name = "remove", about = "Remove a service", aliases = &["rm", "delete", "del"])]
+    /// Remove a service
     Remove(commands::remove::Remove),
-    #[clap(name = "list", about = "List services", aliases = &["ls", "l"])]
+    /// List services
     List(commands::list::List),
-    #[clap(name = "cat", about = "Print the service file for a service")]
+    /// Print the service file for a service
     Cat(commands::cat::Cat),
 }
 
 impl Cli {
     fn execute(&self, systemd: systemd::Systemd) {
-        match self {
-            Self::Run(run) => run.execute(systemd),
-            Self::Start(start) => start.execute(systemd),
-            Self::Status(status) => status.execute(systemd),
-            Self::Stop(stop) => stop.execute(systemd),
-            Self::Restart(restart) => restart.execute(systemd),
-            Self::Enable(enable) => enable.execute(systemd),
-            Self::Disable(disable) => disable.execute(systemd),
-            Self::Reload(reload) => reload.execute(systemd),
-            Self::Logs(logs) => logs.execute(systemd),
-            Self::Remove(remove) => remove.execute(systemd),
-            Self::List(list) => list.execute(systemd),
-            Self::Cat(cat) => cat.execute(systemd),
+        match &self.command {
+            Commands::Run(run) => run.execute(systemd),
+            Commands::Start(start) => start.execute(systemd),
+            Commands::Status(status) => status.execute(systemd),
+            Commands::Stop(stop) => stop.execute(systemd),
+            Commands::Restart(restart) => restart.execute(systemd),
+            Commands::Enable(enable) => enable.execute(systemd),
+            Commands::Disable(disable) => disable.execute(systemd),
+            Commands::Reload(reload) => reload.execute(systemd),
+            Commands::Logs(logs) => logs.execute(systemd),
+            Commands::Remove(remove) => remove.execute(systemd),
+            Commands::List(list) => list.execute(systemd),
+            Commands::Cat(cat) => cat.execute(systemd),
         }
     }
 }

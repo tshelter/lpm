@@ -1,97 +1,75 @@
+use std::{collections::HashMap, mem::take};
+
 use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Run {
-    #[arg(
-        index = 1,
-        help = "The command to run as a service. Wrap 'command in quotes' to pass arguments."
-    )]
-    command: String,
-    #[arg(short, long, help = "The name of the service")]
+    /// The name of the service
+    #[arg(short, long)]
     name: String,
-    #[arg(
-        short = 'e',
-        long,
-        default_value = "false",
-        help = "Copy the current environment to the service. Usually not required."
-    )]
+    /// Copy the current environment to the service. Usually not required.
+    #[arg(short = 'e', long, default_value_t)]
     copy_env: bool,
-
-    #[arg(short, long, default_value = "", help = "A description of the service")]
+    /// A description of the service
+    #[arg(short, long, default_value_t)]
     description: String,
-    #[arg(
-        short,
-        long,
-        help = "List of key=value pairs for the [Unit] section of the service file"
-    )]
+    /// List of key=value pairs for the [Unit] section of the service file
+    #[arg(short, long)]
     unit: Vec<String>,
-    #[arg(
-        short,
-        long,
-        help = "List of key=value pairs for the [Service] section of the service file"
-    )]
+    /// List of key=value pairs for the [Service] section of the service file
+    #[arg(short, long)]
     service: Vec<String>,
-    #[arg(
-        short,
-        long,
-        help = "List of key=value pairs for the [Install] section of the service file"
-    )]
+    /// List of key=value pairs for the [Install] section of the service file
+    #[arg(short, long)]
     install: Vec<String>,
-}
-
-#[inline(always)]
-fn has_not_key(section: &Vec<(String, String)>, key: &str) -> bool {
-    !section.iter().any(|(k, _)| k == key)
+    /// The command to run as a service. Wrap 'command in quotes' to pass arguments.
+    command: String,
 }
 
 impl Run {
     pub fn execute(&self, systemd: crate::systemd::Systemd) {
-        let mut unit_unit = vec![("Description".to_string(), self.description.clone())];
-        let mut unit_service = vec![(
+        let mut unit_unit = HashMap::from([("Description".to_string(), self.description.clone())]);
+        let mut unit_service = HashMap::from([(
             "ExecStart".to_string(),
             format!("/usr/bin/env {}", self.command),
-        )];
-        let mut unit_install = vec![];
+        )]);
+        let mut unit_install = HashMap::new();
 
         let inputs = [&self.unit, &self.service, &self.install];
-        let mut outputs = [&mut unit_unit, &mut unit_service, &mut unit_install];
+        let outputs = [&mut unit_unit, &mut unit_service, &mut unit_install];
 
-        for (input, output) in inputs.iter().zip(outputs.iter_mut()) {
-            for item in *input {
+        for (input, output) in inputs.into_iter().zip(outputs.into_iter()) {
+            for item in input {
                 let parts: Vec<&str> = item.split('=').collect();
-                output.push((parts[0].to_string(), parts[1].to_string()));
+                output.insert(parts[0].to_string(), parts[1].to_string());
             }
         }
 
-        if has_not_key(&unit_unit, "StartLimitIntervalSec") {
-            unit_unit.push(("StartLimitIntervalSec".to_string(), "0".to_string()));
-        }
-
-        if has_not_key(&unit_service, "Restart") {
-            unit_service.push(("Restart".to_string(), "always".to_string()));
-        }
-        if has_not_key(&unit_service, "RestartSec") {
-            unit_service.push(("RestartSec".to_string(), "1".to_string()));
-        }
-        if has_not_key(&unit_service, "WantedBy") {
-            unit_install.push(("WantedBy".to_string(), systemd.default_target.clone()));
-        }
-
-        if has_not_key(&unit_service, "WorkingDirectory") {
-            unit_service.push((
-                "WorkingDirectory".to_string(),
+        unit_service
+            .entry("StartLimitIntervalSec".into())
+            .or_insert_with(|| "0".into());
+        unit_service
+            .entry("Restart".into())
+            .or_insert_with(|| "always".into());
+        unit_service
+            .entry("RestartSec".into())
+            .or_insert_with(|| "1".into());
+        unit_service
+            .entry("WantedBy".into())
+            .or_insert_with(|| systemd.default_target.clone());
+        unit_service
+            .entry("WorkingDirectory".into())
+            .or_insert_with(|| {
                 std::env::current_dir()
                     .expect("Failed to get current directory")
                     .to_str()
                     .expect("Failed to convert current directory path to string")
-                    .to_string(),
-            ));
-        }
+                    .to_string()
+            });
 
         if self.copy_env {
-            let env = std::env::vars().collect::<Vec<(String, String)>>();
-            for (key, value) in env {
-                unit_service.push(("Environment".to_string(), format!("{}='{}'", key, value)));
+            for (key, value) in std::env::vars() {
+                unit_service.insert("Environment".to_string(), format!("{}='{}'", key, value));
             }
         }
 

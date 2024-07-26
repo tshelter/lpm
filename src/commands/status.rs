@@ -4,7 +4,7 @@ use crate::commands::get_service_name;
 
 #[derive(clap::Parser)]
 pub struct Status {
-    #[arg(index = 1, help = "The name of the service to get the status of")]
+    /// The name of the service to get the status of
     service: String,
 }
 
